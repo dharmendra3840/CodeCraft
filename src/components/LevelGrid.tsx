@@ -1,21 +1,30 @@
 import React from 'react';
 import { Lock, Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const levels = [
-  { id: 1, name: "Variables & Types", completed: true, unlocked: true },
-  { id: 2, name: "Control Flow", completed: true, unlocked: true },
-  { id: 3, name: "Functions", completed: false, unlocked: true },
+  { id: 1, name: "Variables & Types", completed: false, unlocked: true },
+  { id: 2, name: "Control Flow", completed: false, unlocked: false },
+  { id: 3, name: "Functions", completed: false, unlocked: false },
   { id: 4, name: "Lists & Loops", completed: false, unlocked: false },
   { id: 5, name: "Dictionaries", completed: false, unlocked: false },
   { id: 6, name: "Classes & Objects", completed: false, unlocked: false },
 ];
 
 const LevelGrid = () => {
+  const navigate = useNavigate();
+
+  const handleLevelClick = (levelId: number, unlocked: boolean) => {
+    if (!unlocked) return;
+    navigate(`/level/${levelId}`);
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {levels.map(level => (
         <div
           key={level.id}
+          onClick={() => handleLevelClick(level.id, level.unlocked)}
           className={`relative p-6 rounded-lg border-2 ${
             level.unlocked
               ? "bg-gray-800 border-blue-500 hover:border-blue-400 cursor-pointer"
