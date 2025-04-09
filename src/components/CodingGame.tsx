@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Play, RotateCcw, HelpCircle, Award, AlertCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Play, RotateCcw, HelpCircle, Award, AlertCircle, ArrowRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Position {
   x: number;
@@ -26,6 +26,7 @@ const GAME_VARIATIONS = [
     obstacles: [],
     hint: "Try using move_right() and move_down() to reach the target!",
     maxMoves: 8,
+    character: "https://images.unsplash.com/photo-1637858868799-7f26a0640eb6?w=64&h=64&fit=crop&auto=format",
   },
   {
     id: 2,
@@ -40,6 +41,7 @@ const GAME_VARIATIONS = [
     ],
     hint: "Find a path around the walls. You might need to go up or down first!",
     maxMoves: 12,
+    character: "https://images.unsplash.com/photo-1637858868799-7f26a0640eb6?w=64&h=64&fit=crop&auto=format",
   },
   {
     id: 3,
@@ -54,6 +56,7 @@ const GAME_VARIATIONS = [
     ],
     hint: "Traps are marked in red. Try to find a safe path around them!",
     maxMoves: 15,
+    character: "https://images.unsplash.com/photo-1637858868799-7f26a0640eb6?w=64&h=64&fit=crop&auto=format",
   },
 ];
 
@@ -68,6 +71,7 @@ const CodingGame = () => {
   const [moves, setMoves] = useState(0);
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const currentVariation = GAME_VARIATIONS[currentGame];
 
@@ -79,6 +83,15 @@ const CodingGame = () => {
     setMoves(0);
     setScore(0);
     setGameOver(false);
+    setShowSuccessModal(false);
+  };
+
+  const handleNextGame = () => {
+    const nextGameIndex = (currentGame + 1) % GAME_VARIATIONS.length;
+    setCurrentGame(nextGameIndex);
+    setPlayerPos(GAME_VARIATIONS[nextGameIndex].initialPos);
+    setCode('');
+    resetGame();
   };
 
   const switchGame = (index: number) => {
@@ -89,12 +102,10 @@ const CodingGame = () => {
   };
 
   const validatePosition = (pos: Position): boolean => {
-    // Check grid boundaries
     if (pos.x < 0 || pos.x >= GRID_SIZE || pos.y < 0 || pos.y >= GRID_SIZE) {
       return false;
     }
 
-    // Check for walls
     const hitWall = currentVariation.obstacles.some(
       obs => obs.type === 'wall' && obs.x === pos.x && obs.y === pos.y
     );
@@ -104,7 +115,6 @@ const CodingGame = () => {
       return false;
     }
 
-    // Check for traps
     const hitTrap = currentVariation.obstacles.some(
       obs => obs.type === 'trap' && obs.x === pos.x && obs.y === pos.y
     );
@@ -187,6 +197,7 @@ const CodingGame = () => {
         playerPos.y === currentVariation.targetPos.y) {
       setSuccess(true);
       setScore(calculateScore());
+      setShowSuccessModal(true);
     }
   }, [playerPos, currentVariation]);
 
@@ -261,9 +272,13 @@ const CodingGame = () => {
                       <motion.div
                         animate={{ scale: [1, 1.1, 1] }}
                         transition={{ duration: 1, repeat: Infinity }}
-                        className="w-full h-full rounded-lg bg-yellow-400 flex items-center justify-center"
+                        className="w-full h-full rounded-lg overflow-hidden"
                       >
-                        G
+                        <img
+                          src={currentVariation.character}
+                          alt="Player"
+                          className="w-full h-full object-cover"
+                        />
                       </motion.div>
                     )}
                     {isTarget && !isPlayer && (
@@ -387,21 +402,80 @@ move_down()"
                     {line}
                   </motion.div>
                 ))}
-                {success && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="text-yellow-400 font-bold mt-4 flex items-center gap-2"
-                  >
-                    <Trophy className="w-5 h-5" />
-                    🎉 Congratulations! You've completed {currentVariation.name}!
-                  </motion.div>
-                )}
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Success Modal */}
+      <AnimatePresence>
+        {showSuccessModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="bg-gray-800 p-8 rounded-lg max-w-md w-full mx-4"
+            >
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="text-center"
+              >
+                <div className="mb-6">
+                  <motion.div
+                    animate={{ 
+                      scale: [1, 1.2, 1],
+                      rotate: [0, 10, -10, 0]
+                    }}
+                    transition={{ 
+                      duration: 0.5,
+                      repeat: Infinity,
+                      repeatDelay: 1
+                    }}
+                    className="text-6xl mb-4"
+                  >
+                    🎉
+                  </motion.div>
+                  <h2 className="text-2xl font-bold mb-2">Congratulations!</h2>
+                  <p className="text-gray-300">
+                    You've completed {currentVariation.name} with a score of {score}!
+                  </p>
+                </div>
+
+                <div className="flex gap-4 justify-center">
+                  {currentGame < GAME_VARIATIONS.length - 1 && (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleNextGame}
+                      className="bg-blue-500 hover:bg-blue-600 px-6 py-3 rounded-lg font-medium flex items-center gap-2"
+                    >
+                      Next Game
+                      <ArrowRight className="w-5 h-5" />
+                    </motion.button>
+                  )}
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={resetGame}
+                    className="bg-gray-700 hover:bg-gray-600 px-6 py-3 rounded-lg font-medium"
+                  >
+                    Try Again
+                  </motion.button>
+                </div>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
