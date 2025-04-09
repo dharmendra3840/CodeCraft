@@ -1,8 +1,19 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Code2, Sparkles, Brain, Trophy, Users, ArrowRight } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import AuthModal from './AuthModal';
 
 const LandingPage = () => {
+  const { user } = useAuth();
+  const [showAuthModal, setShowAuthModal] = React.useState(false);
+
+  const handleStartLearning = () => {
+    if (!user) {
+      setShowAuthModal(true);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
       {/* Hero Section */}
@@ -41,7 +52,10 @@ const LandingPage = () => {
                 transition={{ delay: 0.6, duration: 0.8 }}
                 className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
               >
-                <button className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium flex items-center justify-center gap-2 group">
+                <button 
+                  onClick={handleStartLearning}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium flex items-center justify-center gap-2 group"
+                >
                   Start Learning
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
@@ -137,6 +151,14 @@ const LandingPage = () => {
           </div>
         </div>
       </section>
+
+      {showAuthModal && (
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          mode="signin"
+        />
+      )}
     </div>
   );
 };
